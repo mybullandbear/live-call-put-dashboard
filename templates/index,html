@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Call vs Put Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .container { max-width: 1200px; margin: auto; }
+        .controls { margin-bottom: 20px; }
+        select, button { padding: 8px; margin: 5px; }
+        .chart { height: 400px; margin: 20px 0; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        #ratios { background: #e8f4f8; padding: 10px; margin: 10px 0; }
+        #timestamp { font-size: 0.8em; color: gray; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Live Call vs Put Options (Fyers API)</h1>
+        {% if not session.authenticated %}
+            <a href="{{ url_for('auth') }}"><button>Authenticate with Fyers</button></a>
+        {% else %}
+            <div class="controls">
+                <label>Symbol:</label>
+                <select id="symbol">
+                    {% for key, val in symbols.items() %}
+                        <option value="{{ val }}" {% if val == 'NSE:NIFTY50-INDEX' %}selected{% endif %}>{{ key }}</option>
+                    {% endfor %}
+                </select>
+                <label>Expiry:</label>
+                <input type="date" id="expiry" value="2025-11-27">  <!-- Next weekly -->
+                <button onclick="fetchData()">Refresh Data</button>
+            </div>
+            <div id="ratios"></div>
+            <div id="timestamp"></div>
+            <div id="table"></div>
+            <div id="oi-chart" class="chart"></div>
+            <div id="pcr-chart" class="chart"></div>
+        {% endif %}
+    </div>
+
+    <script>
+        async function fetchData() {
+            const symbol = document.getElementById('symbol').value;
+            const expiry = document.getElementById('expiry').value;
+            const response = await fetch('/data', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `symbol=${symbol}&expiry=${expiry}`
+            });
+            const result = await response.json();
+            if (result.error) { alert(result.error); return; }
+
+            // Update Ratios
+            document.getElementById('ratios').innerHTML = `
+                <h3>Summary Ratios</h3>
+                <p>PCR (OI): ${result.ratios.pcr_oi?.toFixed(2) || 'N/A'}</p>
+                <p>PCR (Volume): ${result.ratios.pcr_volume?.toFixed(2) || 'N/A'}</p>
+                <p>Total Call OI: ${result.ratios.total_call_oi || 0}</p>
+                <p>Total Put OI: ${result.ratios.total_put_oi || 0}</p>
+            `;
+            document.getElementById('timestamp').textContent = `Last Update: ${result.timestamp}`;
+
+            // Update Table
+            let tableHtml = '<table><tr><th>Strike</th><th>Call LTP</th><th>Call Vol</th><th>Call OI</th><th>Put LTP</th><th>Put Vol</th><th>Put OI</th><th>PCR</th></tr>';
+            result.data.forEach(row => {
+                tableHtml += `<tr>
+                    <td>${row.strike}</td>
+                    <td>${row.ltp_Call || ''}</td>
+                    <td>${row.volume_Call || ''}</td>
+                    <td>${row.oi_Call || ''}</td>
+                    <td>${row.ltp_Put || ''}</td>
+                    <td>${row.volume_Put || ''}</td>
+                    <td>${row.oi_Put || ''}</td>
+                    <td>${row.pcr_oi?.toFixed(2) || ''}</td>
+                </tr>`;
+            });
+            tableHtml += '</table>';
+            document.getElementById('table').innerHTML = tableHtml;
+
+            // Update Charts
+            Plotly.newPlot('oi-chart', JSON.parse(result.plots.oi).data, JSON.parse(result.plots.oi).layout);
+            Plotly.newPlot('pcr-chart', JSON.parse(result.plots.pcr).data, JSON.parse(result.plots.pcr).layout);
+        }
+
+        // Auto-refresh every 30s after auth
+        setInterval(fetchData, 30000);
+        if ({{ session.authenticated | tojson }}) fetchData();
+    </script>
+</body>
+</html>
