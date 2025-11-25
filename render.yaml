@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: live-call-put-dashboard
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --worker-class eventlet --workers 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.6
+      - key: FYERS_CLIENT_ID
+        sync: false   # You’ll enter this manually after deploy
+      - key: FYERS_CLIENT_SECRET
+        sync: false   # You’ll enter this manually after deploy
