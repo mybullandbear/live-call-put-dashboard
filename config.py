@@ -1,8 +1,8 @@
 import os
 
 # Fyers API Credentials (get from https://myapi.fyers.in/dashboard)
-FYERS_CLIENT_ID = os.getenv('FYERS_CLIENT_ID', 'HG98A71HF3-100')
-FYERS_CLIENT_SECRET = os.getenv('FYERS_CLIENT_SECRET', 'IZTPPGC5NK')
+FYERS_CLIENT_ID = os.getenv('FYERS_CLIENT_ID', 'YOUR_CLIENT_ID_HERE')
+FYERS_CLIENT_SECRET = os.getenv('FYERS_CLIENT_SECRET', 'YOUR_SECRET_HERE')
 REDIRECT_URI = 'http://localhost:5000/auth/callback'  # For OAuth
 
 # App Config
