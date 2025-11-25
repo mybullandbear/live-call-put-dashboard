@@ -1,6 +1,7 @@
 flask==3.0.3
-fyers-apiv3==0.3.2  # Latest Fyers SDK
+fyers-apiv3>=3.0.0
 plotly==5.24.0
 pandas==2.2.3
 numpy==2.1.1
-requests==2.32.3  # For initial auth
+requests==2.32.3
+gunicorn==22.0.0
