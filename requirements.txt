@@ -1,7 +1,7 @@
 flask==3.0.3
-fyers-apiv3>=3.0.0
+requests==2.31.0
+fyers-apiv3==3.1.7
 plotly==5.24.0
 pandas==2.2.3
 numpy==2.1.1
-requests==2.32.3
 gunicorn==22.0.0
